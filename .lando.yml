@@ -1,0 +1,47 @@
+name: nazwaapki
+recipe: wordpress
+config:
+  php: "8.1"
+  via: apache
+  database: mysql:5.7
+  webroot: ./app
+  xdebug: false
+services:
+  appserver:
+    config:
+      php: config/php.ini
+    overrides:
+      environment:
+        XDEBUG_MODE: "debug,develop"
+  mailhog:
+    type: mailhog
+    hogfrom:
+      - appserver
+  theme:
+    type: node:18 # Let us compile the theme inside the container
+    ports:
+      - "3009:3009"
+  pma:
+    type: phpmyadmin
+    hosts:
+      - database
+    overrides:
+      environment:
+        PHP_IDE_CONFIG: "serverName=nazwaapki"
+tooling:
+  yarn:
+    service: theme
+  xdebug-on:
+    service: appserver
+    description: Enable Xdebug.
+    user: root
+    cmd:
+      - docker-php-ext-enable xdebug && kill -USR2 $(pgrep -o php-fpm) > /dev/null || /etc/init.d/apache2 reload
+      - tput setaf 2 && echo "Xdebug On" && tput sgr 0 && echo
+  xdebug-off:
+    service: appserver
+    description: Disable Xdebug.
+    user: root
+    cmd:
+      - rm /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini && kill -USR2 $(pgrep -o php-fpm) > /dev/null || /etc/init.d/apache2 reload
+      - tput setaf 1 && echo "Xdebug Off" && tput sgr 0 && echo
