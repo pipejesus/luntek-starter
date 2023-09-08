@@ -1,9 +1,9 @@
-name: nazwaapki
+name: nazwaprojektu
 recipe: wordpress
 config:
   php: "8.1"
   via: apache
-  database: mysql:5.7
+  database: mariadb # or... mysql:5.7
   webroot: ./app
   xdebug: false
 services:
@@ -12,23 +12,26 @@ services:
       php: config/php.ini
     overrides:
       environment:
+        PHP_IDE_CONFIG: "serverName=nazwaprojektu"
         XDEBUG_MODE: "debug,develop"
+        XDEBUG_SESSION_START: lando
   mailhog:
     type: mailhog
     hogfrom:
       - appserver
   theme:
     type: node:18 # Let us compile the theme inside the container
-    ports:
-      - "3009:3009"
+    overrides:
+      ports:
+        - 3000:3000
+        - 3001:3001
   pma:
     type: phpmyadmin
     hosts:
       - database
-    overrides:
-      environment:
-        PHP_IDE_CONFIG: "serverName=nazwaapki"
 tooling:
+  npm:
+    service: theme
   yarn:
     service: theme
   xdebug-on:
